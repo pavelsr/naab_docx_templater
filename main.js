@@ -1,6 +1,6 @@
 $(document).ready(function(){
     
-    var is_local = 1; // move to config
+    var is_local = 0; // move to config
     var api_host = 'https://api.bankruptcy.fabmarket.ru';
     
     if (is_local) {
