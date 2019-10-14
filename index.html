@@ -1,0 +1,347 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>Генератор заявок на аукционы по банкротству</title>
+
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css">
+	</script> -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.min.css">
+	</script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.14.3/docxtemplater.min.js"></script>
+	<script src="https://unpkg.com/pizzip@3.0.6/dist/pizzip.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.js"></script>
+	<script src="https://unpkg.com/pizzip@3.0.6/dist/pizzip-utils.js"></script>
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/ru.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script> -->
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script> -->
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.3.4/jquery.inputmask.bundle.min.js"></script>
+
+</head>
+
+<body>
+	<div class="container">
+		<form id="main_form" class="needs-validation">
+			
+			<div class="jumbotron">
+			  <h1 class="display-4">Привет, брокер</h1>
+			  <p class="lead">Все ещё тратишь кучу времени на копипасту и форматирование заявки?</p>
+			  <hr class="my-4">
+			  <p>
+				  Создавай заявки за 5 минут вместо получаса.<br>
+				  Сервис сам заполнит все необходимые поля<br>
+				  Всё что останется - поискать объявление о банкротстве в газете Коммерсант (сервис пока не умеет)<br>
+				  Структура формы рекомендована <a href="https://нааб.рф/">НААБ</a><br>
+				  => Минутка нативной рекламы:<br>
+				  Закажи ЭЦП от СКБ Контур по этой <a href="https://kontur.ru/ca/price/bankrot?p=w01562&SUBID=naab">ссылке</a> и получи скидку 10%<br>
+				  Открой дебетовый счет в Тинькофф по этой <a href="https://www.tinkoff.ru/sl/1KBYlCOlbiK/">ссылке</a> и получи бонусы от меня
+			  </p>
+			  <button type="button" class="btn btn-lg btn-success" data-toggle="modal" data-target="#autoModal">Заполнить автоматически</button>
+			</div>
+
+			<fieldset>
+				<legend>Тип торгов</legend>
+				<div class="form-group">
+					<select name="tender_type" class="form-control form-control-lg" id="tender_type">
+						<option value="auction">Аукцион</option>
+						<option value="public_offer">Публичное предложение</option>
+					</select>
+				</div>
+			</fieldset>
+
+			<fieldset>
+				<legend>Данные лота</legend>
+
+				<div class="form-group">
+					<input type="text" class="form-control form-control-lg" name="lot_name" placeholder="Наименование лота" data-sample="Акула черноперая в количестве 1 шт" required>
+				</div>
+
+				<div class="form-row">
+					<div class="form-group col-8">
+						<div class="input-group">
+							<div class="input-group-prepend">
+								<div class="input-group-text">🌐</div>
+							</div>
+							<input type="text" class="form-control" name="lot_site" placeholder="ЭТП" data-sample="fabrikant.ru" required>
+						</div>
+					</div>
+
+					<div class="form-group col-4">
+						<div class="input-group">
+							<div class="input-group-prepend">
+								<div class="input-group-text">№</div>
+							</div>
+							<input type="text" class="form-control" name="lot_number" placeholder="Номер лота" data-sample="5" required>
+						</div>
+					</div>
+				</div>
+
+				<div class="form-row">
+					<div class="form-group col-8">
+						<div class="input-group">
+							<div class="input-group-prepend">
+								<div class="input-group-text">🏁 ₽</div>
+							</div>
+							<input type="text" class="form-control" name="start_price" id="start_price" placeholder="Начальная цена лота, руб коп" data-sample="1523000.99" required>
+							<small id="start_price_help" class="form-text text-muted"></small>
+						</div>
+					</div>
+
+					<div class="form-group col-4">
+						<div class="input-group">
+							<div class="input-group-prepend">
+								<div class="input-group-text">💰 %</div>
+							</div>
+							<input type="text" class="form-control" name="deposit_percent" id="deposit_percent" placeholder="Задаток, %" data-sample="10" required>
+						</div>
+						<small id="deposit_percent_help" class="form-text text-danger"></small>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label for="reg_start_dt" id="reg_period_label" class="col-2">Период приёма заявок</label>
+					<div class="col-5">
+						<div class="input-group">
+							<div class="input-group-prepend">
+								<div class="input-group-text">с</div>
+							</div>
+							<input type="datetime-local" class="form-control" name="reg_start_dt" id="reg_start_dt" data-sample="12.09.2019 20:00" required>
+							<div class="input-group-prepend">
+								<div class="input-group-text">по</div>
+							</div>
+							<input type="datetime-local" class="form-control" name="reg_stop_dt" id="reg_stop_dt" data-sample="12.09.2019 21:59" required>
+						</div>
+					</div>
+				</div>
+
+				<div class="form-group row only_public_offer">
+					<label for="formGroupExampleInput" class="col-2">Желаемая цена</label>
+					<div class="col-4">
+						<input type="datetime-local" class="form-control" name="desired_price" id="desired_price" data-sample="4099.99">
+					</div>
+				</div>
+
+				<div class="form-group row only_public_offer">
+					<label for="reg_start_dt" id="reg_period_label" class="col-2">Период вхождения</label>
+					<div class="col-5">
+						<div class="input-group">
+							<div class="input-group-prepend">
+								<div class="input-group-text">с</div>
+							</div>
+							<input type="date" class="form-control" name="desired_period_start" data-sample="2019-09-12">
+							<div class="input-group-prepend">
+								<div class="input-group-text">по</div>
+							</div>
+							<input type="date" class="form-control" name="desired_period_stop" data-sample="2019-09-15">
+						</div>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="input-group only_auction">
+						<div class="input-group-prepend">
+							<div class="input-group-text">🦶 %</div>
+						</div>
+						<input class="form-group form-control" type="text" name="auction_step" placeholder="Шаг аукциона, % от начальной цены" data-sample="5">
+					</div>
+				</div>
+
+				<div class="form-group row only_auction">
+					<label for="formGroupExampleInput" class="col-2">Дата начала аукциона</label>
+					<div class="col-4">
+						<input type="datetime-local" class="form-control" name="tender_start_dt" id="tender_start_dt" data-sample="16.09.2019 11:00">
+					</div>
+					<label for="formGroupExampleInput" class="col-2">Дата подведения итогов аукциона</label>
+					<div class="col-4">
+						<input type="datetime-local" class="form-control" name="tender_stop_dt" id="tender_stop_dt" data-sample="20.09.2019 12:00">
+					</div>
+				</div>
+
+				<div class="form-group only_public_offer">
+					<label for="exampleFormControlTextarea1">График снижения цены по лоту</label>
+					<textarea class="form-control" id="exampleFormControlTextarea1" name="price_change_graph" rows="3" disabled></textarea>
+				</div>
+
+				<div class="row">
+					<div class="form-group col-6">
+						<label for="manager_fullname">Сообщение в ГАЗЕТЕ «Коммерсант» <a href="https://bankruptcy.kommersant.ru/search/index.php" target="_blank">поискать</a></label>
+						<div class="input-group">
+							<div class="input-group-prepend">
+								<div class="input-group-text">выпуск №</div>
+							</div>
+							<input type="text" class="form-control" name="kommersant_release_number" data-sample="1" required>
+							<div class="input-group-prepend">
+								<div class="input-group-text">от</div>
+							</div>
+							<input type="date" class="form-control" name="kommersant_release_date" data-sample="2019-09-15" required>
+						</div>
+					</div>
+
+					<div class="form-group col-6">
+						<label for="manager_fullname">Сообщение на САЙТЕ «Коммерсант»</label>
+						<input type="url" class="form-control" name="kommersant_url" placeholder="https://www.kommersant.ru/doc/3667733" required>
+					</div>
+				</div>
+
+			</fieldset>
+
+			<fieldset class="form-group">
+				<legend>Данные организатора торгов</legend>
+
+				<div class="form-group row">
+					<label for="manager_fullname" class="col-3 col-form-label">ФИО или название компании</label>
+					<div class="col-9">
+						<input type="text" class="form-control" name="manager_fullname" placeholder="Иванов Иван Иваныч" required>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label for="formGroupExampleInput" class="col-3">Телефон</label>
+					<div class="col-9">
+						<input type="text" class="form-control" name="manager_phone" data-sample="+7-905-224-0044" required>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label for="formGroupExampleInput" class="col-3">Email</label>
+					<div class="col-9">
+						<input type="email" class="form-control" name="manager_email" placeholder="foo@example.org" required>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label for="formGroupExampleInput" class="col-3">Адрес местонахождения</label>
+					<div class="col-9">
+						<input type="text" class="form-control col-9" name="manager_address" placeholder="г. Санкт-Петербург, ул. Стародеревенская ул., 11к2, комната 290" required>
+					</div>
+				</div>
+
+				<div class="form-row">
+					<div class="form-group col-4">
+						<input type="text" class="form-control" name="manager_vat" placeholder="ИНН" data-sample="7710140679">
+					</div>
+
+					<div class="form-group col-4">
+						<input type="text" class="form-control" name="manager_ogrn" placeholder="ОГРН" data-sample="1176196001420">
+					</div>
+
+					<div class="form-group col-4">
+						<input type="text" class="form-control" name="manager_kpp" placeholder="КПП" data-sample="773401001">
+					</div>
+				</div>
+
+				<input type="checkbox" id="arbitr_organizes_itself" name="manager_organizes_itself" value="1">Организатором торгов является сам конкурсный (арбитражный) управляющий<br>
+
+				<div class="form-group" id="manager_regulator">
+					<label for="formGroupExampleInput">Член СРО</label>
+					<input type="text" class="form-control" name="manager_regulator" placeholder="">
+				</div>
+			</fieldset>
+
+			<fieldset>
+				<legend>Данные должника</legend>
+
+				<div class="form-group row">
+					<label for="formGroupExampleInput" class="col-3">ФИО(компания)-должник</label>
+					<div class="col-9">
+						<input type="text" class="form-control" name="debtor_fullname" placeholder='ООО "Ромашка"' required>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label class="col-3" for="manager_fullname">Номер банкротного дела</label>
+					<div class="col-9">
+						<input type="text" class="form-control" name="bankruptcy_court_number" placeholder="А56-50114/2016" required>
+					</div>
+				</div>
+
+			</fieldset>
+
+			<fieldset>
+				<legend>Реквизиты для перечисления задатка</legend>
+
+				<input class="form-group form-control" type="text" name="deposit_recipient_name" placeholder="Получатель" data-sample="АО «Тинькофф Банк»" required>
+				<input class="form-group form-control" type="text" name="deposit_recipient_address" placeholder="Адрес" data-sample="Москва, 123060, 1-й Волоколамский проезд, д. 10, стр. 1" required>
+				<div class="row">
+					<div class="col-4">
+						<input class="form-group form-control" type="text" name="deposit_recipient_vat" placeholder="ИНН" data-sample="7710140679" required>
+					</div>
+					<div class="col-4">
+						<input class="form-group form-control" type="text" name="deposit_recipient_ogrn" placeholder="ОГРН" data-sample="1176196001420" required>
+					</div>
+					<div class="col-4">
+						<input class="form-group form-control" type="text" name="deposit_recipient_kpp" placeholder="КПП" data-sample="773401001" required>
+					</div>
+				</div>
+				<input class="form-group form-control" type="text" name="bank_name" placeholder="Банк" data-sample="АО «Тинькофф Банк»" required>
+
+				<div class="row">
+					<div class="col-6">
+						<input class="form-group form-control" type="text" name="bank_bik" placeholder="БИК" data-sample="044525974" required>
+					</div>
+					<div class="col-6">
+						<input class="form-group form-control" type="text" name="bank_korr" placeholder="кор.счёт" data-sample="30101810145250000974" required>
+					</div>
+				</div>
+
+				<input class="form-group form-control" type="text" name="bank_acnt" placeholder="расчётный счет" data-sample="30232810100000000004" required>
+
+			</fieldset>
+		</form>
+
+		<button type="button" class="btn btn-success" onclick="generate()">Сгенерировать заявку</button>
+		<button type="button" class="btn btn-light" onclick="fill_sample()">Заполнить демо-данными</button>
+		<button type="button" class="btn btn-light" onclick="clear_form()">Очистить форму</button>
+
+	</div>
+
+	<!-- Modal -->
+	<div class="modal fade" id="autoModal" tabindex="-1" role="dialog" aria-labelledby="autoModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="eautoModalLabel">Заполнить автоматически по данным агрегаторов</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<form id="auto_form" class="needs-validation">
+						<div class="form-group">
+							<label for="manager_fullname" >Ссылка на лот в агрегаторе</label>
+							<input type="text" class="form-control" name="url" placeholder="">
+							<small class="form-text">Поддерживаются агрегаторы <a href="https://tbankrot.ru/">tbankrot.ru</a> и <a href="https://торги-россии.рф/">торги-россии.рф</a></small>
+							<small class="form-text">Можно найти один и тот же лот на двух агрегаторах, вставить обе ссылки и тогда система проверит оба источника</small>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+					<select class="custom-select" id="demo_url_select">
+					    <option value="" selected>Демо</option>
+					    <option value="https://tbankrot.ru/item?id=3055125">Демо публичка с tbankrot.ru</option>
+					    <option value="https://tbankrot.ru/item?id=3051603">Демо аукцион с tbankrot.ru</option>
+					    <option value="https://торги-россии.рф/bankrot/396981">Демо публичка с торги-россии.рф</option>
+						<option value="https://торги-россии.рф/bankrot/394788">Демо аукцион с торги-россии.рф</option>
+					 </select>
+					<button id="auto_submit_button" class="btn btn-primary">Заполнить</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="bundle.js"></script>
+	<script src="main.js"></script>
+	<!-- <script src="index.js"></script> -->
+
+</body>
+
+</html>
